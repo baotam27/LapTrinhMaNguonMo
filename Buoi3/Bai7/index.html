@@ -1,0 +1,17 @@
+<input type="text" id="kw" placeholder="Nhập từ khóa">
+
+<button onclick="search()">Tìm kiếm</button>
+<ul id="result"></ul>
+<script>
+    function search() {
+        let q = document.getElementById("kw").value;
+        fetch('search.php?q=' + encodeURIComponent(q))
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById("result").innerHTML = data.map(p =>
+
+                    `<li>${p.name} - ${p.price}</li>`).join('');
+
+            });
+    }
+</script>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Tỷ giá ngoại tệ</title>
+    <style>
+        /* Thiết lập giao diện bảng hiển thị cho đẹp mắt */
+        table { border-collapse: collapse; width: 400px; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h2>Bảng tỷ giá ngoại tệ (Cập nhật mỗi 10 phút)</h2>
+    <div id="time">Đang tải...</div>
+    <table>
+        <thead>
+            <tr>
+                <th>Mã Ngoại Tệ</th>
+                <th>Tỷ giá (VND)</th>
+            </tr>
+        </thead>
+        <tbody id="rateTable"></tbody>
+    </table>
+
+    <script>
+        // Hàm gọi sang PHP để lấy thông tin tỷ giá mới nhất
+        function fetchRates() {
+            fetch('rate.php')
+                .then(res => res.json()) // Đọc dữ liệu JSON trả về từ file rate.php
+                .then(data => {
+                    // Hiển thị thời gian cập nhật lấy từ gói dữ liệu JSON của server lên màn hình
+                    document.getElementById("time").innerText = "Cập nhật lúc: " + data.last_updated;
+                    
+                    const tbody = document.getElementById("rateTable");
+                    tbody.innerHTML = ""; // Xóa sạch dữ liệu bảng cũ
+                    
+                    // Duyệt qua từng cặp (Tên tiền tệ, Giá trị tiền tệ) trong mảng 'rates' nhận được
+                    for (const [currency, value] of Object.entries(data.rates)) {
+                        const tr = document.createElement("tr");
+                        // Dùng hàm toLocaleString() để tự động thêm dấu phẩy phân cách hàng nghìn cho số tiền (Ví dụ: 25,450)
+                        tr.innerHTML = `<td><b>${currency}</b></td><td>${Number(value).toLocaleString()} VNĐ</td>`;
+                        tbody.appendChild(tr); // Thêm dòng vừa tạo vào bảng
+                    }
+                });
+        }
+
+        fetchRates(); // Gọi hàm chạy ngay lập tức trong lần đầu tiên tải trang web
+        
+        // Thiết lập vòng lặp thời gian: Cứ sau mỗi 10 phút sẽ tự động chạy lại hàm fetchRates ở trên một lần
+        // Quy đổi thời gian: 10 phút * 60 giây * 1000 mili-giây = 600,000 mili-giây
+        setInterval(fetchRates, 10 * 60 * 1000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>To-do List JSON</title>
+    <style>
+        /* Định dạng để chữ bị gạch ngang khi công việc đã hoàn thành */
+        .completed { text-decoration: line-through; color: #888; }
+        li { margin: 8px 0; }
+    </style>
+</head>
+<body>
+    <h2>Ứng dụng To-do List</h2>
+    <input type="text" id="taskInput" placeholder="Nhập công việc mới...">
+    <button onclick="addTask()">Thêm</button>
+    <ul id="taskList"></ul>
+
+    <script>
+        // Khi trang web vừa tải xong hoàn toàn, tự động gọi hàm loadTasks để lấy dữ liệu về hiển thị
+        document.addEventListener("DOMContentLoaded", loadTasks);
+
+        // Hàm lấy danh sách công việc từ server PHP về và vẽ lên giao diện HTML
+        function loadTasks() {
+            // Dùng fetch để gửi yêu cầu GET (mặc định) tới file todo.php
+            fetch('todo.php')
+                .then(res => res.json()) // Chuyển đổi dữ liệu thô nhận được từ server sang dạng mảng JSON của JS
+                .then(tasks => {
+                    const list = document.getElementById("taskList");
+                    list.innerHTML = ""; // Xóa sạch danh sách cũ trên giao diện trước khi nạp mới
+                    
+                    // Duyệt qua từng công việc trong mảng dữ liệu trả về
+                    tasks.forEach((task, index) => {
+                        const li = document.createElement("li");
+                        // Nếu task.completed là true thì thêm class 'completed' để gạch ngang chữ
+                        li.innerHTML = `
+                            <span class="${task.completed ? 'completed' : ''}" onclick="toggleTask(${index})">${task.text}</span>
+                            <button onclick="deleteTask(${index})">Xóa</button>
+                        `;
+                        list.appendChild(li); // Thêm thẻ li này vào trong thẻ ul
+                    });
+                });
+        }
+
+        // Hàm xử lý khi người dùng bấm nút "Thêm"
+        function addTask() {
+            const input = document.getElementById("taskInput");
+            if (!input.value.trim()) return; // Nếu ô nhập trống rỗng hoặc toàn dấu cách thì không làm gì cả
+            // Gửi gói tin yêu cầu thêm dữ liệu lên server
+            sendData({ action: 'add', text: input.value.trim() });
+            input.value = ""; // Xóa sạch chữ trong ô nhập sau khi thêm xong
+        }
+
+        // Hàm xử lý khi bấm vào chữ công việc để đánh dấu Hoàn thành / Chưa hoàn thành
+        function toggleTask(index) {
+            sendData({ action: 'toggle', index: index }); // Gửi vị trí (index) cần đổi trạng thái lên server
+        }
+
+        // Hàm xử lý khi bấm nút "Xóa"
+        function deleteTask(index) {
+            sendData({ action: 'delete', index: index }); // Gửi vị trí (index) cần xóa lên server
+        }
+
+        // Hàm trung gian chuyên dùng để đóng gói và đẩy dữ liệu qua bên PHP bằng phương thức POST
+        function sendData(data) {
+            fetch('todo.php', {
+                method: 'POST', // Sử dụng phương thức POST để truyền dữ liệu an toàn
+                headers: { 'Content-Type': 'application/json' }, // Khai báo cho server biết dữ liệu gửi lên là định dạng JSON
+                body: JSON.stringify(data) // Chuyển đổi mảng đối tượng của JS thành chuỗi JSON để truyền đi qua đường truyền internet
+            }).then(() => loadTasks()); // Sau khi server xử lý xong xuôi, gọi lại hàm loadTasks để cập nhật lại giao diện mới
+        }
+    </script>
+</body>
+</html>

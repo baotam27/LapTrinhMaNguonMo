@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+    <input type="text" id="name">
+    <button onclick="sayHello()">Gửi</button>
+    <p id="msg"></p>
+    <script>
+        function sayHello() {
+            let formData = new FormData();
+            formData.append('name', document.getElementById("name").value);
+            fetch('hello.php', {
+                method: 'POST',
+                body: formData
+            })
+                .then(res => res.text())
+                .then(data => document.getElementById("msg").innerText =
+
+                    data);
+        }
+    </script>
+</body>
+
+</html>

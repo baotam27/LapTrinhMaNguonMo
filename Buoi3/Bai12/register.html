@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Đăng ký tài khoản</title>
+    <style>
+        /* Màu đỏ hiển thị lỗi */
+        .error { color: red; font-size: 14px; margin-top: 5px; }
+        .form-group { margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+    <h2>Form Đăng Ký Tài Khoản</h2>
+    <form id="registerForm">
+        <div class="form-group">
+            <label>Tên đăng nhập:</label><br>
+            <input type="text" id="username">
+            <div id="usernameError" class="error"></div>
+        </div>
+        <div class="form-group">
+            <label>Mật khẩu:</label><br>
+            <input type="password" id="password">
+            <div id="passwordError" class="error"></div>
+        </div>
+        <button type="submit">Đăng ký</button>
+    </form>
+    
+    <div id="statusMessage" style="margin-top: 15px; font-weight: bold;"></div>
+
+    <script>
+        // Lắng nghe sự kiện bấm nút Submit gửi Form
+        document.getElementById("registerForm").addEventListener("submit", function(e) {
+            e.preventDefault(); // Chặn hành vi load lại trang mặc định của HTML
+            
+            // Lấy giá trị chữ và cắt bỏ khoảng trắng thừa 2 đầu bằng hàm trim()
+            let username = document.getElementById("username").value.trim();
+            let password = document.getElementById("password").value.trim();
+            let isValid = true;
+
+            // Xóa sạch thông báo lỗi cũ trước khi kiểm tra lượt mới
+            document.getElementById("usernameError").innerText = "";
+            document.getElementById("passwordError").innerText = "";
+
+            // Kiểm tra tên đăng nhập từ 5 ký tự trở lên
+            if (username.length < 5) {
+                document.getElementById("usernameError").innerText = "Tên đăng nhập phải chứa ít nhất 5 ký tự.";
+                isValid = false;
+            }
+
+            // Kiểm tra mật khẩu từ 6 ký tự trở lên
+            if (password.length < 6) {
+                document.getElementById("passwordError").innerText = "Mật khẩu phải chứa ít nhất 6 ký tự.";
+                isValid = false;
+            }
+
+            // Nếu có lỗi, dừng lại luôn không gửi sang PHP nữa
+            if (!isValid) return;
+
+            // Dùng Fetch API bắn dữ liệu ngầm sang cho file register.php xử lý
+            fetch('register.php', {
+                method: 'POST', // Phương thức gửi là POST
+                headers: { 'Content-Type': 'application/json' }, // Định dạng gửi đi là chuỗi JSON
+                body: JSON.stringify({ username: username, password: password }) // Mã hóa dữ liệu sang JSON
+            })
+            .then(res => res.json()) // Nhận phản hồi trả về từ file PHP
+            .then(data => {
+                const statusDiv = document.getElementById("statusMessage");
+                statusDiv.innerText = data.message; // Hiển thị dòng chữ thông báo
+                
+                // Đổi màu chữ dựa theo trạng thái thành công (xanh) hay thất bại (đỏ)
+                statusDiv.style.color = data.success ? "green" : "red";
+                
+                // Nếu đăng ký thành công, xóa sạch chữ đã nhập trong form để người dùng nhập lượt mới
+                if(data.success) document.getElementById("registerForm").reset();
+            });
+        });
+    </script>
+</body>
+</html>
